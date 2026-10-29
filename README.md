@@ -24,6 +24,7 @@ Sub(name:)            Sub helper set: false
 Sub.make(withSeed:)   Sub helper set: false
 Sub.make()            Sub helper set: false
 ObjC [[cls alloc] …]  Sub helper set: false
+ObjC [[Sub alloc] …]  Sub helper set: false
 ```
 
 `helper set` reports whether `Sub.helper` is non-nil:
@@ -36,9 +37,34 @@ ObjC [[cls alloc] …]  Sub helper set: false
 - `Sub.make()`: a Swift factory returning `Self` calls `self.init(seed:)`.
 - `ObjCMakeWithClass(Sub.self)`: Objective-C calls
   `[(Foo *)[cls alloc] initWithSeed:1]` on a `Class` value.
+- `ObjCMakeSub()`: Objective-C in `Client.m` calls
+  `[[Sub alloc] initWithSeed:1]`, with a receiver whose static type is `Sub *`.
 
 `make control` builds the same program with `objc_direct` defined away, and all
-five lines print `true`.
+six lines print `true`.
+
+## -Wobjc-direct-init-subclass
+
+Build with a clang that has the warning, cleaning first so the objects are
+rebuilt with it:
+
+```
+make clean run CLANG=/path/to/llvm-project/build/bin/clang
+```
+
+It flags the one route clang can see, the call in `Client.m`:
+
+```
+Client.m:6:46: warning: direct initializer 'initWithSeed:' of 'Foo' leaves subclass 'Sub' partially initialized [-Wobjc-direct-init-subclass]
+```
+
+The other routes stay silent. Swift call sites never reach clang. `Foo`'s own
+convenience initializer and factory send the message to a `Foo *`, and
+`ObjCMakeWithClass` casts to `Foo *`.
+
+`Client.m` declares `Sub` by hand, and `main.swift` gives it the Objective-C
+name `Sub`. Swift's generated header can't be used: it redeclares
+`-initWithSeed:` on `Sub`, and clang rejects that because the method is direct.
 
 Set `CLANG` or `SWIFTC` to use another toolchain, for example
 `make run CLANG=/path/to/clang`.

@@ -8,33 +8,36 @@ BUILD  := build
 # Lets a non-Xcode CLANG find the macOS SDK.
 SDKROOT ?= $(shell xcrun --show-sdk-path)
 export SDKROOT
+
 DEMO   := $(BUILD)/objc_direct_init_demo
+OBJS   := $(BUILD)/Foo.o $(BUILD)/Client.o
 
 all: $(DEMO)
 
 $(BUILD):
 	mkdir -p $@
 
-$(BUILD)/Foo.o: Foo.m Foo.h | $(BUILD)
-	$(CLANG) -fobjc-arc -c Foo.m -o $@
+$(OBJS): $(BUILD)/%.o: %.m Foo.h | $(BUILD)
+	$(CLANG) -fobjc-arc -c $< -o $@
 
-$(DEMO): main.swift Foo.h $(BUILD)/Foo.o
-	$(SWIFTC) -import-objc-header Foo.h main.swift $(BUILD)/Foo.o -o $@
+$(DEMO): main.swift Foo.h $(OBJS)
+	$(SWIFTC) -import-objc-header Foo.h main.swift $(OBJS) -o $@
 
 run: $(DEMO)
 	./$(DEMO)
 
 # The same program with objc_direct defined away: every route prints true.
-CONTROL := $(BUILD)/control/objc_direct_init_demo
+CONTROL      := $(BUILD)/control/objc_direct_init_demo
+CONTROL_OBJS := $(BUILD)/control/Foo.o $(BUILD)/control/Client.o
 
 $(BUILD)/control:
 	mkdir -p $@
 
-$(BUILD)/control/Foo.o: Foo.m Foo.h | $(BUILD)/control
-	$(CLANG) -fobjc-arc -Dobjc_direct= -c Foo.m -o $@
+$(CONTROL_OBJS): $(BUILD)/control/%.o: %.m Foo.h | $(BUILD)/control
+	$(CLANG) -fobjc-arc -Dobjc_direct= -c $< -o $@
 
-$(CONTROL): main.swift Foo.h $(BUILD)/control/Foo.o
-	$(SWIFTC) -Xcc -Dobjc_direct= -import-objc-header Foo.h main.swift $(BUILD)/control/Foo.o -o $@
+$(CONTROL): main.swift Foo.h $(CONTROL_OBJS)
+	$(SWIFTC) -Xcc -Dobjc_direct= -import-objc-header Foo.h main.swift $(CONTROL_OBJS) -o $@
 
 control: $(CONTROL)
 	./$(CONTROL)
