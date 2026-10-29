@@ -1,5 +1,5 @@
-# Port of D127661877: an objc_direct designated initializer skips a Swift
-# subclass's stored properties. Builds with the Xcode toolchain on macOS.
+# An objc_direct designated initializer skips a Swift subclass's stored
+# properties. Builds with the Xcode toolchain on macOS.
 
 CLANG  ?= xcrun clang
 SWIFTC ?= xcrun swiftc

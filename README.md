@@ -5,7 +5,9 @@ with `__attribute__((objc_direct))`. A direct method has no method-list entry,
 so when that initializer runs on an instance of the Swift subclass `Sub`, only
 `Foo`'s implementation runs. `Sub`'s stored-property initialization is skipped,
 and `Sub.helper`, a non-optional `NSObject`, reads as nil. That's undefined
-behavior, and nothing diagnoses it at compile time or at run time.
+behavior, and stock toolchains don't diagnose it, at compile time or at run
+time. A proposed clang warning, `-Wobjc-direct-init-subclass`, catches the
+Objective-C route below.
 
 ## Build and run
 
@@ -15,6 +17,9 @@ Apple clang 21) and the GNU make 3.81 that ships with macOS.
 ```
 make run
 ```
+
+Set `CLANG` or `SWIFTC` to use another toolchain, for example
+`make run CLANG=/path/to/clang`.
 
 Output:
 
@@ -45,8 +50,8 @@ six lines print `true`.
 
 ## -Wobjc-direct-init-subclass
 
-Build with a clang that has the warning, cleaning first so the objects are
-rebuilt with it:
+The warning isn't in a released clang yet. To see it, build with a clang that
+has it, cleaning first so the objects are rebuilt with it:
 
 ```
 make clean run CLANG=/path/to/llvm-project/build/bin/clang
@@ -65,6 +70,3 @@ convenience initializer and factory send the message to a `Foo *`, and
 `Client.m` declares `Sub` by hand, and `main.swift` gives it the Objective-C
 name `Sub`. Swift's generated header can't be used: it redeclares
 `-initWithSeed:` on `Sub`, and clang rejects that because the method is direct.
-
-Set `CLANG` or `SWIFTC` to use another toolchain, for example
-`make run CLANG=/path/to/clang`.
