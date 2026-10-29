@@ -14,7 +14,7 @@ Objective-C route below.
 Needs Xcode's command-line tools. Tested with Xcode 27.1 (Apple Swift 6.4,
 Apple clang 21) and the GNU make 3.81 that ships with macOS.
 
-```
+```sh
 make run
 ```
 
@@ -53,13 +53,13 @@ six lines print `true`.
 The warning isn't in a released clang yet. To see it, build with a clang that
 has it, cleaning first so the objects are rebuilt with it:
 
-```
+```sh
 make clean run CLANG=/path/to/llvm-project/build/bin/clang
 ```
 
 It flags the one route clang can see, the call in `Client.m`:
 
-```
+```sh
 Client.m:6:46: warning: direct initializer 'initWithSeed:' of 'Foo' leaves subclass 'Sub' partially initialized [-Wobjc-direct-init-subclass]
 ```
 
